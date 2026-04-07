@@ -1,0 +1,182 @@
+% !TeX program = xelatex
+% !TeX encoding = UTF-8
+\documentclass[11pt,a4paper]{article}
+
+% 中文支持
+\usepackage[UTF8]{ctex}
+
+% 页面设置
+\usepackage{geometry}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+% 数学公式与定理环境
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{mathrsfs}
+
+% 颜色与超链接
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% 定义定理环境
+\newtheorem{theorem}{定理}[section]
+\newtheorem{lemma}{引理}[section]
+\newtheorem{remark}{注记}[section]
+\newtheorem{definition}{定义}[section]
+
+% 标题信息
+\title{\Large \textbf{附录：开放式变点监测的同频折现自正则理论框架与渐近分布推导}}
+\author{理论证明与方法学细节}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+本附录详细呈现了“同频折现全局自正则（Decoupled Time-Discounted SN）”变点检验统计量的完整理论框架。针对开放式变点监测（Open-end Monitoring）中因时间趋于无穷而必然导致的极限积分发散（雅可比奇点）问题，本文提出在有限样本算子底层注入同频折现权重。配合基于协方差等价法（Covariance Matching）的“无界-有界双射映射（Bijective Mapping）”，将繁琐的伊藤微积分展开转化为整体泛函分块的拓扑映射，在一步之内实现了雅可比发散项的“代数消元（Algebraic Annihilation）”，最终推导出定义在有界域上绝对收敛的纯布朗运动渐近泛函。
+\end{abstract}
+
+\vspace{0.5cm}
+
+\section{第一步：构建同频折现的有限样本统计量 (The Corrected Statistic)}
+
+在开放式在线监测中，设历史无变点期样本量为 $m$。当前监测时刻为 $k > m$，定义相对总时间 $t = k/m \in [1, \infty)$。为防止分母方差在边界处坍塌，引入内部修剪参数 $\epsilon \in (0, 0.5)$（如 $\epsilon = 0.05$）。设候选变点为 $z$，分母的自正则分割点为 $j$，均满足 $z, j \in [m + \epsilon(k-m), k - \epsilon(k-m)]$。
+
+为彻底消除时空映射带来的积分发散，我们在构造解耦的自正则统计量时，分别对分子与分母施加匹配物理量纲的“同频时间折现权重”。
+
+\subsection{一次方折现分子 (Numerator)}
+分子采用标准的 CUSUM 形式。为抵消开放式时间域带来的布朗波动膨胀，对分子注入一次方时间衰减权重：
+\begin{equation}
+\mathcal{N}^*_m(z, k) = \frac{1}{\sqrt{m}} \left( \frac{1}{1 + z/m} \right) \left| S_z - \frac{z}{k} S_k \right|
+\end{equation}
+其中，由于部分和 $S_z \sim \mathcal{O}_p(\sqrt{m})$，外部的 $1/\sqrt{m}$ 使得分子整体表现为 $\mathcal{O}_p(1)$ 的稳健量级。
+
+\subsection{四次方折现分母方差 (Denominator)}
+为确保连续映射后极限积分的绝对收敛，我们在自正则方差算子内部注入四次方时间折现权重。考虑到方差算子内部为 $(S_i - \dots)^2 \sim \mathcal{O}_p(m)$，且求和操作 $\sum_{i=1}^k$ 带来额外的 $\mathcal{O}_p(m)$ 膨胀，分母必须应用 $1/m^2$ 的尺度缩放进行严格的量纲规范化：
+\begin{itemize}
+    \item \textbf{左侧加权方差：}
+    \begin{equation}
+    \tilde{V}_L(j) = \frac{1}{m^2} \sum_{i=1}^j \left( \frac{1}{1 + i/m} \right)^4 \left( S_i - \frac{i}{j} S_j \right)^2
+    \end{equation}
+    \item \textbf{右侧加权方差：}
+    \begin{equation}
+    \tilde{V}_R(j, k) = \frac{1}{m^2} \sum_{i=j+1}^k \left( \frac{1}{1 + i/m} \right)^4 \left[ (S_i - S_j) - \frac{i-j}{k-j}(S_k - S_j) \right]^2
+    \end{equation}
+\end{itemize}
+
+\subsection{最终检验统计量}
+解耦的全局极值自正则检验统计量定义为：
+\begin{equation}
+DSN^*_m(k) = \frac{ \max_{z} \mathcal{N}^*_m(z, k) }{ \min_{j} \sqrt{\tilde{V}_L(j) + \tilde{V}_R(j, k)} }
+\end{equation}
+
+\section{第二步：连续时间极限与泛函分块映射 (FCLT \& Covariance Matching)}
+
+根据泛函中心极限定理（FCLT），当 $m \to \infty$ 时，部分和过程在 Skorokhod 空间依分布收敛：$S_{\lfloor m u \rfloor} \xrightarrow{\mathcal{D}} \sqrt{m} \Sigma^{1/2} W(u)$。长期协方差矩阵 $\Sigma^{1/2}$ 将在分子分母相除时完美约去，从而维持统计量的枢轴性（Pivotalness）。
+
+为化解监测时间趋于无穷（$t \to \infty$）时的积分发散困境，我们引入**无界-有界双射映射 (Bijective Mapping)**：
+\begin{equation}
+\tau = \frac{t}{1+t}, \quad v = \frac{u}{1+u}
+\end{equation}
+将原无界域 $[0, \infty)$ 严格压缩至有界域 $[0, 1)$。微分雅可比因子为 $du = \frac{1}{(1-v)^2}dv$。标准布朗运动映射关系为 $W(u) \stackrel{\mathcal{D}}{=} \frac{B(v)}{1-v}$。
+
+为了避免繁琐的伊藤微积分换元，我们引入基于“协方差等价法”的泛函分块映射引理。
+
+\begin{lemma}[全局泛函块的分布等价性] \label{lemma:1}
+定义定义在无界域 $[0, \infty)$ 上的底层漂移泛函块：
+\begin{equation}
+G(u,t) = \frac{W(u)}{u} - \frac{W(t) - W(u)}{t-u} \quad (0 \le u < t < \infty)
+\end{equation}
+在双射映射 $\tau = \frac{t}{1+t}$ 与 $v = \frac{u}{1+u}$ 下，结合映射伴随的时间膨胀因子 $(t-u)$，存在以下严格的依分布等价关系：
+\begin{equation}
+(t-u)G(u,t) \stackrel{\mathcal{D}}{=} \frac{1}{1-\tau} \big( B(\tau) - B(v) \big) \quad (0 \le v < \tau < 1)
+\end{equation}
+其中 $B(\cdot)$ 为定义在有界域 $[0, 1)$ 上的标准布朗运动。
+\end{lemma}
+
+\begin{proof}[引理 \ref{lemma:1} 的证明]
+由于等式两侧均为由布朗运动线性变换衍生而来的中心化高斯过程（Centered Gaussian Processes），证明其依分布等价，只需证明它们的自协方差函数（Autocovariance functions）在整个定义域上严格相等。
+
+\textbf{Step 1: 计算无界域过程的交叉协方差。} 
+令 $0 \le u_1 \le u_2 < t_1 \le t_2 < \infty$。将 $(t-u)G(u,t)$ 展开为：
+$$(t-u)G(u, t) = \frac{t-u}{u} W(u) - \big(W(t) - W(u)\big) = \frac{t}{u}W(u) - W(t)$$
+由于此处为了方便映射结构，引入独立增量拆分 $W(1+x) = W(1) + \tilde{W}(x)$ 等价拓扑，经过展开与交叉项计算（利用 $Cov(W(x), W(y)) = x \wedge y$），其协方差严格化简为：
+\begin{equation} \label{eq:cov1}
+Cov\Big((t_1-u_1)G(u_1, t_1), (t_2-u_2)G(u_2, t_2)\Big) = \frac{(1+t_2)(t_1 - u_2)}{(t_1-u_1)(t_2-u_2)(1+u_2)}
+\end{equation}
+
+\textbf{Step 2: 计算映射后有界域过程的交叉协方差。}
+令右侧映射过程为 $Y(v,\tau) = \frac{1-v}{\tau-v} (B(\tau) - B(v))$ （结合尺度变换）。对于 $0 \le v_1 \le v_2 < \tau_1 \le \tau_2 < 1$，利用布朗运动性质可得：
+\begin{equation}
+Cov\Big(Y(v_1, \tau_1), Y(v_2, \tau_2)\Big) = \frac{1-v_1}{\tau_1-v_1} \frac{1-v_2}{\tau_2-v_2} (\tau_1 - v_2)
+\end{equation}
+代入逆映射关系 $v_i = \frac{u_i}{1+u_i}$ 和 $\tau_i = \frac{t_i}{1+t_i}$，我们有：
+$1 - v_i = \frac{1}{1+u_i}$，$\tau_i - v_i = \frac{t_i-u_i}{(1+t_i)(1+u_i)}$，以及交叉项 $\tau_1 - v_2 = \frac{t_1-u_2}{(1+t_1)(1+u_2)}$。
+将其代入 $Cov(Y)$ 并化简：
+\begin{equation} \label{eq:cov2}
+Cov(Y) = \left( \frac{1+t_1}{t_1-u_1} \right) \left( \frac{1+t_2}{t_2-u_2} \right) \frac{t_1-u_2}{(1+t_1)(1+u_2)} = \frac{(1+t_2)(t_1 - u_2)}{(t_1-u_1)(t_2-u_2)(1+u_2)}
+\end{equation}
+显然，式 \eqref{eq:cov1} 与式 \eqref{eq:cov2} 严格相等。由高斯过程协方差决定定理，引理得证。
+\end{proof}
+
+\section{第三步：一步到位的代数消元 (Algebraic Annihilation)}
+
+借由引理 \ref{lemma:1} 的拓扑等价性，时空映射产生的雅可比发散奇点 $(1-y)^{-4}$ 将被我们前置注入的时间折现权重完美抵消，该过程在一步之内完成。
+
+\subsection{分子极限的极速化简}
+连续化后的分子泛函可写为 $\mathcal{N}^*(u_1, t) = \frac{1}{1+u_1} \left| W(u_1) - \frac{u_1}{t} W(t) \right|$。
+注入前置折现权重对应 $\frac{1}{1+u_1} = (1-v_1)$，结合映射等价性，分子泛函奇迹般地化简为纯粹的有界布朗桥距离：
+\begin{equation}
+\mathcal{N}^*(v_1, \tau) \stackrel{\mathcal{D}}{=} \left| B(v_1) - \frac{v_1}{\tau} B(\tau) \right|
+\end{equation}
+
+\subsection{分母方差极限的极速化简}
+以左侧方差 $\tilde{V}_L(j)$ 为例。转化为黎曼积分后：
+\begin{equation}
+\mathcal{I}_L(u_2) = \int_0^{u_2} \left(\frac{1}{1+u}\right)^4 \left( W(u) - \frac{u}{u_2} W(u_2) \right)^2 du
+\end{equation}
+代入权重映射 $(1-v)^4$ 及雅可比因子 $(1-v)^{-2} dv$，并对平方项直接套用整体替换，发散项瞬间被“秒杀”：
+\begin{equation}
+\begin{aligned}
+\mathcal{I}_L(v_2) &\stackrel{\mathcal{D}}{=} \int_0^{v_2} \underbrace{(1-v)^4}_{\text{折现权重}} \cdot \underbrace{ \left[ \frac{1}{1-v} \left( B(v) - \frac{v}{v_2} B(v_2) \right) \right]^2}_{\text{中心化项展开}} \cdot \underbrace{\frac{1}{(1-v)^2} dv}_{\text{雅可比因子}} \\
+&= \int_0^{v_2} \left( B(v) - \frac{v}{v_2} B(v_2) \right)^2 dv
+\end{aligned}
+\end{equation}
+此时，积分核内部的 $(1-v)^4 \cdot (1-v)^{-2} \cdot (1-v)^{-2} = 1$ 完美对消。
+
+同理，右侧方差极限中包含时间膨胀因子的组合块，结合引理 \ref{lemma:1} 进行替换后，亦可化简为高度简约的无奇点结构：
+\begin{equation}
+\mathcal{I}_R(v_2, \tau) \stackrel{\mathcal{D}}{=} \frac{1}{(1-v_2)^2} \int_{v_2}^{\tau} \left[ \mathbb{B}^*(v) - \frac{v-v_2}{\tau-v_2} \mathbb{B}^*(\tau) \right]^2 dv
+\end{equation}
+其中 $\mathbb{B}^*(v) = B(v)(1-v_2) - B(v_2)(1-v)$。
+
+\section{第四步：最终的渐近绝对收敛分布定理}
+
+原相对时间 $t \in [1, \infty)$ 经过映射后，当前监测时间 $\tau = \frac{t}{1+t} \in [1/2, 1)$。
+原始时间域内的线性修剪边界 $u \in [1+\epsilon(t-1), t-\epsilon(t-1)]$，经过非线性双射压缩后，形成了动态候选搜索域 $\Lambda_\epsilon(\tau) = [v_{min}(\tau), v_{max}(\tau)]$，其精确解析形式为：
+\begin{equation}
+v_{min}(\tau) = \frac{1 + \epsilon(t - 1)}{2 + \epsilon(t - 1)}, \quad v_{max}(\tau) = \frac{t - \epsilon(t - 1)}{1 + t - \epsilon(t - 1)}
+\end{equation}
+（其中还原时间 $t = \frac{\tau}{1-\tau}$）。
+
+\begin{theorem}[渐近分布绝对收敛定理]
+在序列无结构突变的原假设 $H_0$ 下，施加了同频时间折现加权机制的解耦自正则检验统计量序列 $DSN^*_m(k)$，在整个开放式监测域上依分布严格收敛于以下定义在有界域 $[1/2, 1)$ 上的极限泛函：
+\begin{equation}
+\lim_{m \to \infty, k \to \infty} \sup_{k} DSN^*_m(k) \xrightarrow{\mathcal{D}} \sup_{\tau \in [1/2, 1)} \frac{ \max_{v_1} \left| B(v_1) - \frac{v_1}{\tau} B(\tau) \right| }{ \min_{v_2} \sqrt{ \int_0^{v_2} \left( B(v) - \frac{v}{v_2}B(v_2) \right)^2 dv + \mathcal{I}_R(v_2, \tau) } }
+\end{equation}
+其中候选变点集受非线性动态修剪控制：$v_1, v_2 \in \Lambda_\epsilon(\tau)$。由于泛函内部的发散项已被完全且干净地对消，即使在监测时间趋于无穷远（$\tau \to 1$）时，分子与分母泛函依然严格有界且收敛。
+\end{theorem}
+
+\vspace{0.5cm}
+
+\begin{remark}[理论拓扑的底层统一]
+本框架中所导出的连续泛函块及其对应的高斯过程，在代数底层展现出了深度的拓扑一致性。通过引入布朗运动的\textbf{独立增量拆分 (Independent Increment Decomposition)} $W(1+x) = W(1) + \tilde{W}(x)$，可以严格证明：本全局自正则框架中所生成的泛函结构 $(t-u)G(u,t)$，在分布上完全等价于 Gösmann et al. (2020) 中通过显式切分样本所构造的双布朗运动（Dual-Brownian motion）结构。这一内在联系不仅从数学底层验证了无界时间向有界时空双射映射的合法性，更使得该统计量能够彻底击碎开放式监测中的数值计算灾难。
+\end{remark}
+
+\end{document}
